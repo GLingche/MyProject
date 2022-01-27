@@ -6,8 +6,8 @@
         <span>{{item.name}}</span>
       </div>
       <div class="driver" v-for="(item,index) in dirver" :key="index" :style="activeDriver(item.x,item.y,item.isService)" ><h2 class="driverAge">{{item.driverAge}}</h2></div>
-      <div class="range" v-for="(item,index) in passenger" :key="index" :style="location(item.x,item.y)">
-        <div class="passenger"></div>
+      <div class="range" v-for="(item,index) in passenger" :key="index" :style="region(item.x,item.y,item.Rwidth,item.Rheight)">
+        <div class="passenger" :style="updateMargin()"></div>
       </div>
       <div class="defualtRange"></div>
  </div>
@@ -42,7 +42,6 @@ export default {
       const $router = useRouter()//vue3中使用编程式路由
       let dirver = reactive([])
       let passenger = reactive([])
-      let range = reactive({width:160,height:160})
       let beaginSite = ref()
       let endSite = ref()
       let tempSite = reactive({name:'正在获取您的地理位置....'})
@@ -60,7 +59,17 @@ export default {
          }
       }
 
-      //是否接到乘客
+      //乘客搜索范围
+      function region(x,y,Rwidth,Rheight){
+          return{
+           left:  x + "px",
+           top: y + "px",
+           width: Rwidth + 'px',
+           height: Rheight + 'px'
+          }
+      }
+
+      //是否接到乘客样式变化
       function activeDriver(x,y,val){
         if(!val)
           return {
@@ -74,32 +83,52 @@ export default {
            backgroundColor:"red"
            }
       }
-  
-  
 
+      
   //计算动态变化的margin值
   function getMargin(){
-     let marginTop = (range.height-30)/2
-     let marginLeft = (range.width-30)/2
+     let marginTop = (passenger[0].Rheight-30)/2
+     let marginLeft = (passenger[0].Rwidth-30)/2
 
      let margin = {marginTop,marginLeft} 
+    
 
      return margin
   }
+  
+
+  //乘客的margin变化
+  function updateMargin(){
+      return{
+        marginTop: getMargin().marginTop + 'px',
+        marginLeft: getMargin().marginLeft + 'px'
+      }
+  }
+  
+
+
+   //延长搜索范围
+    function extend(){
+
+    }
 
     /**
      * 判断司机是否在乘客约车范围
      * 若是：则将其isService属性置为true
      */
-
-    function search(){
-         let radius = range.width/2
+    function search(unwatch,preseconds){
+        let updateseconds = Date.now()
+        if(updateseconds-preseconds>2000){
+            
+        }
+        Toast('正在为您寻找车辆')
+         let radius = passenger[0].Rwidth/2
           //乘客的初始位置
           let lotX = passenger[0].x + getMargin().marginLeft
           let lotY = passenger[0].y + getMargin().marginTop
 
-                //由于代理的映射需要时间去完全映射数组里所有的对象  用setTimeout可以解决一开始undefine的问题
-          setTimeout(()=>{
+          //vue2中由于代理的映射需要时间去完全映射数组里所有的对象  用setTimeout可以解决一开始undefine的问题   setTimeout(()=>{})
+          
             for(let i = 0;i<3;i++){
                 let dx = lotX > dirver[i].x?lotX - dirver[i].x : dirver[i].x - lotX
                 let dy = lotY > dirver[i].y?lotY - dirver[i].y : dirver[i].y - lotY 
@@ -109,31 +138,30 @@ export default {
                   // console.log("successful")
                   passenger[0].isServiced = true;
                   dirver[i].isService = true;
+                  $router.push({
+                        name:'jieshao'
+                      })
+                    Toast.clear()
+                    unwatch()//取消监视
                   break;
                 }            
             }
-           })
+
     }
 
+     //触发事件按钮 
      function  onSubmit(values) {
-          Toast('正在为您寻找车辆')
-
-          //watchEffect可以智能的监测你想要监测的数据
-          watchEffect(()=>search())
-
-          setTimeout(()=>{
-            $router.push({
-              name:'jieshao'
-          })
-          Toast.clear()
-        },1000)  
+      let preseconds = Date.now()
+      //watchEffect可以智能的监测你想要监测的数据  
+     let unwatch =  watchEffect(()=>search(unwatch,preseconds))//传入自身的取消监视函数
+    
         
-         console.log('submit', values);
+    console.log('submit', values);
     }
-      
+
 
       return {
-        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,activeDriver,getMargin,range,search
+        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,activeDriver,updateMargin,region
       }
     },
   created() {
@@ -141,7 +169,7 @@ export default {
       //初始乘客位置检索
       let randomIndex = Math.floor(Math.random()*5) //[0,5)
       this.beaginSite = this.tempSite
-      this.passenger.push({x:this.sites[randomIndex].x-this.getMargin().marginLeft,y: this.sites[randomIndex].y-this.getMargin().marginTop,isServiced:false})
+      this.passenger.push({x:this.sites[randomIndex].x-65,y:this.sites[randomIndex].y-65,Rwidth:160,Rheight:160,isServiced:false})
 
       //初始化三个司机
       for(let i =0;i<3;i++){
@@ -158,37 +186,6 @@ export default {
     },2000)
 
   },
-// watch:{
-    
-//       dirver:{
-//         deep:true,
-//         Immediate:false,
-//         handler(newVal,oldVal){  
-//           let radius = this.range.width/2
-//           //乘客的初始位置
-//           let lotX = this.passenger[0].x + this.getMargin().marginLeft
-//           let lotY = this.passenger[0].y + this.getMargin().marginTop
-    
-//           //由于代理的映射需要时间去完全映射数组里所有的对象  用setTimeout可以解决一开始undefine的问题
-//           setTimeout(()=>{
-//             for(let i = 0;i<3;i++){
-//                 let dx = lotX > newVal[i].x?lotX - newVal[i].x : newVal[i].x - lotX
-//                 let dy = lotY > newVal[i].y?lotY - newVal[i].y : newVal[i].y - lotY 
-//                 let distance = Math.floor(Math.hypot(dx,dy))  // 函数返回所有平方英寸的平方根
-//                 // console.log("@@",distance)
-//                 if(distance<=radius){
-//                   // console.log("successful")
-//                   this.passenger[0].isServiced = true;
-//                   newVal[i].isService = true;
-//                   break;
-//                 }            
-//             }
-//            })
-//         },
-      
-//       }
-//   },
-
   mounted(){
        let dirver = this.dirver;
       //设置司机随机移动的行为
@@ -202,7 +199,6 @@ export default {
     }
     
     timer()   
-   
     // clearInterval(dirver[0].time)
 
   }
@@ -262,8 +258,6 @@ export default {
     position: absolute;
     border:1px dashed black;
     box-sizing:border-box;
-    width:160px;
-    height:160px;
     border-radius: 50%;
   }    
 
@@ -275,8 +269,6 @@ export default {
     width:30px;
     height:30px;
     border-radius: 50%;
-    margin-top:65px;
-    margin-left:65px;
   }
 
   h3{
