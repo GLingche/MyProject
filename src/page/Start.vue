@@ -6,7 +6,7 @@
         <span>{{item.name}}</span>
       </div>
       <div class="driver" v-for="(item,index) in dirver" :key="index" :style="activeDriver(item.x,item.y,item.isService)" ><h2 class="driverAge">{{item.driverAge}}</h2></div>
-      <div class="range" v-for="(item,index) in passenger" :key="index" :style="region(item.x,item.y,item.Rwidth,item.Rheight)">
+      <div class="range" v-for="(item,index) in passenger" :key="index" :style="region(item.x,item.y,item.Rwidth,item.Rheight,item.trigger)" v-show="!item.isServiced">
         <div class="passenger" :style="updateMargin()"></div>
       </div>
       <div class="defualtRange"></div>
@@ -48,8 +48,7 @@ export default {
       let sites = reactive([{name:'花都广场',x:470,y:230},{name:'学府路',y:100,x:200},{name:'汇通广场',y:100,x:600},
       {name:'中西结合医院',y:300,x:200},{name:'白云机场',y:420,x:900}])
 
-
-     
+    
 
       //元素的相对位置
       function location(x,y){
@@ -60,15 +59,29 @@ export default {
       }
 
       //乘客搜索范围
-      function region(x,y,Rwidth,Rheight){
+      function region(x,y,Rwidth,Rheight,trigger){
+        if(!trigger)
           return{
+           borderColor: '#52af4a',
            left:  x + "px",
            top: y + "px",
            width: Rwidth + 'px',
-           height: Rheight + 'px'
+           height: Rheight + 'px',
+           borderWidth: 1 + 'px',
+           borderStyle: 'dashed', 
+          }
+          return {
+           borderColor: 'red',
+           left:  x + "px",
+           top: y + "px",
+           width: Rwidth + 'px',
+           height: Rheight + 'px',
+           borderWidth: 1 + 'px',
+           borderStyle: 'dashed',
           }
       }
-
+  
+      
       //是否接到乘客样式变化
       function activeDriver(x,y,val){
         if(!val)
@@ -87,16 +100,26 @@ export default {
       
   //计算动态变化的margin值
   function getMargin(){
-     let marginTop = (passenger[0].Rheight-30)/2
-     let marginLeft = (passenger[0].Rwidth-30)/2
+        //由于第一次获取margin值时对象中还未有该属性，可以用以下两种方法解决
+
+        // 1、if(typeof a==='undefined'){
+        //     console.log("#$#$")
+        // } 
+     let marginTop,marginLeft
+     try{
+         marginTop = (passenger[0].Rheight-30)/2 
+         marginLeft = (passenger[0].Rwidth-30)/2  
+     }catch(error){
+         marginTop = 65
+         marginLeft = 65
+     } 
 
      let margin = {marginTop,marginLeft} 
     
-
-     return margin
+     return margin 
   }
   
-
+  
   //乘客的margin变化
   function updateMargin(){
       return{
@@ -104,13 +127,28 @@ export default {
         marginLeft: getMargin().marginLeft + 'px'
       }
   }
-  
-
 
    //延长搜索范围
     function extend(){
+         let Ox = passenger[0].x + getMargin().marginLeft
+         let Oy = passenger[0].y + getMargin().marginTop   
 
+         passenger[0].Rwidth*=1.5
+         passenger[0].Rheight*=1.5
+
+         passenger[0].x = Ox - getMargin().marginLeft
+         passenger[0].y = Oy - getMargin().marginTop
     }
+
+  //检查乘客输入的地址
+  function check(){    
+  
+      if(isRule){
+      let end = sites.filter((item,index,array) => endSite == item.name )
+      }else{
+
+      }
+  }
 
     /**
      * 判断司机是否在乘客约车范围
@@ -119,7 +157,8 @@ export default {
     function search(unwatch,preseconds){
         let updateseconds = Date.now()
         if(updateseconds-preseconds>2000){
-            
+            extend()//延长搜索范围
+            preseconds = updateseconds
         }
         Toast('正在为您寻找车辆')
          let radius = passenger[0].Rwidth/2
@@ -136,7 +175,6 @@ export default {
                 console.log("@@",distance)
                 if(distance<=radius){
                   // console.log("successful")
-                  passenger[0].isServiced = true;
                   dirver[i].isService = true;
                   $router.push({
                         name:'jieshao'
@@ -149,27 +187,39 @@ export default {
 
     }
 
-     //触发事件按钮 
-     function  onSubmit(values) {
-      let preseconds = Date.now()
-      //watchEffect可以智能的监测你想要监测的数据  
-     let unwatch =  watchEffect(()=>search(unwatch,preseconds))//传入自身的取消监视函数
-    
-        
-    console.log('submit', values);
+    function start(info){
+      passenger[0].isServiced = true;
+      let useTime = Math.floor(Math.random()*(5000-3000)) +3000//随机用车时间(3s-5s)
+      setTimeout(()=>{
+
+      },useTime)
     }
 
+     //触发事件按钮 
+  function  onSubmit() {
+      let isRule = sites.some((item,index,array) => endSite.value == item.name)//检查用户的输入
+
+      if(isRule){
+      passenger[0].trigger = true//触发车辆搜索事件
+      let preseconds = Date.now()
+      //watchEffect可以智能的监测你想要监测的数据  
+      let unwatch =  watchEffect(()=>search(unwatch,preseconds))//传入自身的取消监视函数
+      }
+      else{
+        alert('您输入的地址不在服务区哦，请重新输入')
+      }
+    }
 
       return {
-        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,activeDriver,updateMargin,region
+        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,updateMargin,region,getMargin,activeDriver,start
       }
     },
+    
   created() {
-
       //初始乘客位置检索
       let randomIndex = Math.floor(Math.random()*5) //[0,5)
       this.beaginSite = this.tempSite
-      this.passenger.push({x:this.sites[randomIndex].x-65,y:this.sites[randomIndex].y-65,Rwidth:160,Rheight:160,isServiced:false})
+      this.passenger.push({x:this.sites[randomIndex].x-this.getMargin().marginLeft,y:this.sites[randomIndex].y-this.getMargin().marginTop,Rwidth:160,Rheight:160,isServiced:false,trigger:false})
 
       //初始化三个司机
       for(let i =0;i<3;i++){
@@ -187,7 +237,9 @@ export default {
 
   },
   mounted(){
-       let dirver = this.dirver;
+    this.$mybus.on('start',this.start)//全局事件总线注册
+
+    let dirver = this.dirver;
       //设置司机随机移动的行为
       function timer(){
        for(let i = 0;i<dirver.length;i++){
@@ -243,7 +295,6 @@ export default {
      border:1px dashed #f40;
   }
   .map .driver{
-      background-color:rgb(105, 138, 230);
       top:420px;/*50~420*/
       left:820px;/*150~820*/
       position:absolute;
@@ -256,7 +307,6 @@ export default {
 
   .map .range{
     position: absolute;
-    border:1px dashed black;
     box-sizing:border-box;
     border-radius: 50%;
   }    

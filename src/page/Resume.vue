@@ -9,16 +9,27 @@
                 <span>姓名:</span> 
         </div> 
 
-      <van-button type="primary" round size="normal"  to="/"><van-icon name="cross" size="40" /></van-button>
+      <van-button type="primary" round size="normal"  @click="close"><van-icon name="cross" size="40" /></van-button>
     </div>
 
 </template>
 
 <script>
+import { useRouter} from 'vue-router'
+import { getCurrentInstance ,reactive} from "vue";
 export default {
     name:"Resume",
     setup(){
-        return 
+        const { proxy } = getCurrentInstance();//获取当前vue对象的代理实例
+        const $router = useRouter()//vue3中使用编程式路由
+        function close(){
+            proxy.$mybus.emit('start','')
+            $router.push({
+			name:'chufa',
+		})
+        }
+
+        return {close}
     }
 }
 </script>

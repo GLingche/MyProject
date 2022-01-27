@@ -20,6 +20,7 @@ export default {
     Banner,
   },
   setup(){
+    
 
     function test(info){
         console.log("111")

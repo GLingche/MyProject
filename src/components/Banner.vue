@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { useRouter , useRoute} from 'vue-router'
+import { useRouter} from 'vue-router'
 import { getCurrentInstance ,reactive} from "vue";
 
 export default {
@@ -38,6 +38,8 @@ export default {
 	const $router = useRouter()//vue3中使用编程式路由
 	// const $route = useRoute()
 	const { proxy } = getCurrentInstance();//获取当前vue对象的代理实例
+
+
 	function test(){
 		proxy.$mybus.emit('test','info22')
 	}
