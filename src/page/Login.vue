@@ -1,4 +1,5 @@
 <template>
+    <button @click="test">fda</button>
     <div class="login">
              <div class="form_head">
         <h3 v-text="title || initTitle"></h3>
@@ -16,7 +17,7 @@
         </div>
 
         <div class="form_input">
-        <input class="sign-btn" type="submit" name="sumbit" value="login"> 
+            <input class="sign-btn" type="submit" name="sumbit" value="login"> 
         </div>
     </form>
 
@@ -28,6 +29,7 @@
 import axios from 'axios'
 import { useRouter} from 'vue-router'
 import {getCurrentInstance,ref} from 'vue'
+import { apiAddress } from '../request/Api'
 export default {
     name:'Login',
     props:['title'],
@@ -60,6 +62,16 @@ export default {
             )
         }
 
+        function test(){
+            apiAddress({
+                id: 1
+            }).then(res=>{
+                console.log('请求成功了',res.data)
+            },
+            error => {
+                console.log('请求失败了',error.message)
+            })
+        }
         function onSubmit(value){
             if(props.title=="管理员登录"){
                 ChangeBanner()
@@ -72,9 +84,8 @@ export default {
             })
         }
 
-        return {onSubmit,initTitle,infoList,isAdmin}
-    }
-    
+        return {onSubmit,initTitle,infoList,isAdmin,test}
+    }   
 }
 </script>
 
@@ -120,7 +131,6 @@ export default {
     background: rgba(255, 255, 255, 5);
     border-radius: 6px;
 }
-
 
 .sign-btn{
     width:100%;

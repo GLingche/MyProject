@@ -3,7 +3,7 @@
         <h2><van-icon class-prefix="my-icon" name="extra" />灵车出行</h2>
 		<ul>
 			<li>
-				<select @click="loginShow">
+				<select @click="extend">
 						<option v-for="(v,index) in range" :key="index" :value="v" >{{v}}</option>
 				</select>
 			</li>
@@ -27,7 +27,11 @@ export default {
 		let range = reactive(["扩大范围","缩短范围"])
 		let record = reactive(["导出乘客信息","导出司机信息"])
 
-		return {range,record}	
+		const  extend = (value) =>{
+			proxy.$mybus.emit('mapExtend',value.target.value)
+		}	
+
+		return {range,record,extend}	
 	}
 }
 </script>

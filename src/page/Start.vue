@@ -9,7 +9,7 @@
       <div class="range" v-for="(item,index) in passenger" :key="index" :style="region(item.x,item.y,item.Rwidth,item.Rheight,item.trigger)" v-show="!item.isServiced">
         <div class="passenger" :style="updateMargin()"></div>
       </div>
-      <div class="defualtRange"></div>
+      <div class="defualtRange" :class="{'big-Range':active}"></div>
  </div>
  <div >
    <van-form @submit="onSubmit">
@@ -40,13 +40,42 @@ export default {
     props:['loginStatus'],
     setup(props){
       const $router = useRouter()//vue3中使用编程式路由
+      let active = ref(false)//搜索范围触发条件
       let dirver = reactive([])
       let passenger = reactive([])
       let beaginSite = ref()
       let endSite = ref()
       let tempSite = reactive({name:'正在获取您的地理位置....'})
+      let moveLot = reactive({left:150,right:820,top:50,bottom:420})
       let sites = reactive([{name:'花都广场',x:470,y:230},{name:'学府路',y:100,x:200},{name:'汇通广场',y:100,x:600},
       {name:'中西结合医院',y:300,x:200},{name:'白云机场',y:420,x:900}])
+
+
+     //改变地图范围
+     function mapExtend(value){
+       if(value == '扩大范围'){
+       active.value = true 
+
+       //改变司机的移动范围
+        claerTimes()
+        moveLot.left = 0
+        moveLot.right = 970
+        moveLot.top = 0
+        moveLot.bottom = 470
+        timer(moveLot)
+       }
+       else{
+        active.value = false 
+
+       //改变司机的移动范围
+        claerTimes()
+        moveLot.left = 150
+        moveLot.right = 820
+        moveLot.top = 50
+        moveLot.bottom = 420
+        timer(moveLot)
+       }
+     } 
 
     
       //元素的相对位置
@@ -59,11 +88,11 @@ export default {
 
     
       //设置司机随机移动的行为
-      function timer(){
+      function timer(moveLotTemp){
        for(let i = 0;i<dirver.length;i++){
         dirver[i].time = setInterval(()=>{
-          dirver[i].x = Math.floor(Math.random()*(820-150)) + 150;
-          dirver[i].y = Math.floor(Math.random()*(420-50)) + 50;  
+          dirver[i].x = Math.floor(Math.random()*(moveLot.right-moveLot.left)) + moveLot.left;
+          dirver[i].y = Math.floor(Math.random()*(moveLot.bottom-moveLot.top)) + moveLot.top;  
       },3000)
        }
     }
@@ -250,12 +279,12 @@ export default {
       }
 
       else{
-        alert('您输入的地址不在服务区哦，请重新输入')
+        alert('您输入的地址不在服务区哦,请重新输入')
       }
     }
 
       return {
-        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,updateMargin,region,getMargin,activeDriver,start,timer
+        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,updateMargin,region,getMargin,activeDriver,start,timer,active,mapExtend
       }
     },
     
@@ -282,7 +311,7 @@ export default {
   },
   mounted(){
     this.$mybus.on('start',this.start)//全局事件总线注册
-    
+    this.$mybus.on('mapExtend',this.mapExtend)
     //挂载后(页面渲染完成后)开启定时器
     this.timer()   
     // clearInterval(dirver[0].time)
@@ -321,7 +350,7 @@ export default {
      border:1px dashed #f40;
   }
   .big-Range{
-    position:relative;
+     position:relative;
      top:0;
      left:0;
      width:1000px;
@@ -329,8 +358,8 @@ export default {
      border:1px dashed #f40;
   }
   .map .driver{
-      top:420px;/*50~420*/
-      left:820px;/*150~820*/
+      top:420px;/*50~420  => 0~470*/
+      left:820px;/*150~820 => 0=>970*/
       position:absolute;
       border:1px solid black;
       box-sizing:border-box;
@@ -339,6 +368,7 @@ export default {
       border-radius: 50%;
   }
 
+  /* 乘客查询范围   */
   .map .range{
     position: absolute;
     box-sizing:border-box;
