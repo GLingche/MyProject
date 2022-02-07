@@ -1,5 +1,4 @@
 <template>
-    
     <div class="login">
              <div class="form_head">
         <h3 v-text="title || initTitle"></h3>
@@ -26,18 +25,45 @@
 </template>
 
 <script>
-import ref from 'vue'
-import { useRouter , useRoute} from 'vue-router'
+import axios from 'axios'
+import { useRouter} from 'vue-router'
+import {getCurrentInstance,ref} from 'vue'
 export default {
     name:'Login',
     props:['title'],
-    setup(){
+    setup(props){
         const $router = useRouter()//vue3中使用编程式路由
         let initTitle = "乘客登录"
         let infoList = ["",""]
-        let loginStatus = false;
+        let loginStatus = false
+        let isAdmin = ref(false)
+
+        const {proxy} = getCurrentInstance();//获取当前vue对象的代理实例
+
+        function ChangeBanner() {
+            console.log("qwe")
+            proxy.$mybus.emit('changeBanner',!isAdmin.value)
+        }
+
+        function sendAxios() {
+            axios.get('http://localhost:8080/user/select',{
+                params: {
+                    id: 1
+                }
+            }).then(
+                response =>{
+                    console.log('请求成功了',response.data[0].id)
+                },
+                error => {
+                    console.log('请求失败了',error.message)
+                }
+            )
+        }
 
         function onSubmit(value){
+            if(props.title=="管理员登录"){
+                ChangeBanner()
+            }
             $router.push({
                 name:'chufa',
                 params:{
@@ -46,7 +72,7 @@ export default {
             })
         }
 
-        return {onSubmit,initTitle,infoList}
+        return {onSubmit,initTitle,infoList,isAdmin}
     }
     
 }

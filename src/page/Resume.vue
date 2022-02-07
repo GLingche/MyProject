@@ -19,11 +19,12 @@ import { useRouter} from 'vue-router'
 import { getCurrentInstance ,reactive} from "vue";
 export default {
     name:"Resume",
-    setup(){
+    props:['index'],
+    setup(props){
         const { proxy } = getCurrentInstance();//获取当前vue对象的代理实例
         const $router = useRouter()//vue3中使用编程式路由
         function close(){
-            proxy.$mybus.emit('start','')
+            proxy.$mybus.emit('start',props.index)
             $router.push({
 			name:'chufa',
 		})

@@ -49,7 +49,6 @@ export default {
       {name:'中西结合医院',y:300,x:200},{name:'白云机场',y:420,x:900}])
 
     
-
       //元素的相对位置
       function location(x,y){
          return {
@@ -57,6 +56,25 @@ export default {
            top: y + "px",
          }
       }
+
+    
+      //设置司机随机移动的行为
+      function timer(){
+       for(let i = 0;i<dirver.length;i++){
+        dirver[i].time = setInterval(()=>{
+          dirver[i].x = Math.floor(Math.random()*(820-150)) + 150;
+          dirver[i].y = Math.floor(Math.random()*(420-50)) + 50;  
+      },3000)
+       }
+    }
+
+   //清除所有定时器
+   function claerTimes(){
+      for(let dirver of dirver){
+         clearTimeout(dirver.time)
+      }
+   } 
+
 
       //乘客搜索范围
       function region(x,y,Rwidth,Rheight,trigger){
@@ -100,11 +118,14 @@ export default {
       
   //计算动态变化的margin值
   function getMargin(){
-        //由于第一次获取margin值时对象中还未有该属性，可以用以下两种方法解决
-
-        // 1、if(typeof a==='undefined'){
-        //     console.log("#$#$")
-        // } 
+        
+/** 由于第一次获取margin值时对象中还未有该属性，可以用以下两种方法解决 
+ *1、if(typeof a==='undefined'){
+             console.log("#$#$")
+         }
+  2、try catch 
+ * 
+*/       
      let marginTop,marginLeft
      try{
          marginTop = (passenger[0].Rheight-30)/2 
@@ -140,22 +161,22 @@ export default {
          passenger[0].y = Oy - getMargin().marginTop
     }
 
-  //检查乘客输入的地址
+  //检查乘客输入的地址 并返回该地址的坐标
   function check(){    
-  
-      if(isRule){
-      let end = sites.filter((item,index,array) => endSite == item.name )
-      }else{
-
-      }
+      let end = sites.filter((item,index,array) => endSite.value == item.name )//返回的对象会自动转化为Array类型
+      console.log(end[0].x)
+      let lot = {endX:end[0].x,endY:end[0].y}
+      return lot;
   }
+
 
     /**
      * 判断司机是否在乘客约车范围
      * 若是：则将其isService属性置为true
      */
-    function search(unwatch,preseconds){
+    function search(unwatch,preseconds,watchTime){
         let updateseconds = Date.now()
+
         if(updateseconds-preseconds>2000){
             extend()//延长搜索范围
             preseconds = updateseconds
@@ -165,53 +186,76 @@ export default {
           //乘客的初始位置
           let lotX = passenger[0].x + getMargin().marginLeft
           let lotY = passenger[0].y + getMargin().marginTop
-
           //vue2中由于代理的映射需要时间去完全映射数组里所有的对象  用setTimeout可以解决一开始undefine的问题   setTimeout(()=>{})
           
             for(let i = 0;i<3;i++){
                 let dx = lotX > dirver[i].x?lotX - dirver[i].x : dirver[i].x - lotX
                 let dy = lotY > dirver[i].y?lotY - dirver[i].y : dirver[i].y - lotY 
                 let distance = Math.floor(Math.hypot(dx,dy))  // 函数返回所有平方英寸的平方根
-                console.log("@@",distance)
-                if(distance<=radius){
+                if(distance<=radius&&watchTime>=1){
                   // console.log("successful")
-                  dirver[i].isService = true;
+                  Toast.clear()
+                  unwatch()//取消监视
+                  dirver[i].isService = true
+                  clearInterval(dirver[i].time)
                   $router.push({
-                        name:'jieshao'
-                      })
-                    Toast.clear()
-                    unwatch()//取消监视
+                        name:'jieshao',
+                        params:{
+                          index:i
+                        }
+                      })  
                   break;
                 }            
-            }
-
+            } 
     }
 
-    function start(info){
+    //出发前往目的地
+    function start(index){
       passenger[0].isServiced = true;
+
       let useTime = Math.floor(Math.random()*(5000-3000)) +3000//随机用车时间(3s-5s)
       setTimeout(()=>{
+        
+         //恢复乘客初始搜索范围
+          passenger[0].Rwidth = 160
+          passenger[0].Rheight = 160
+          //移动乘客的位置
+          passenger[0].x = check().endX - getMargin().marginLeft
+          passenger[0].y = check().endY - getMargin().marginTop
+          //恢复乘客默认状态
+          passenger[0].isServiced = false
+          passenger[0].trigger = false
 
+          //移动司机的位置
+          dirver[index].x = check().endX
+          dirver[index].y = check().endY  
+          dirver[index].isService = false
+          claerTimes()//清除所有定时器
+          timer()//重新开启定时器
+          alert('即将到达目的地，注意检查随身物品，准备下车')
       },useTime)
     }
 
      //触发事件按钮 
   function  onSubmit() {
       let isRule = sites.some((item,index,array) => endSite.value == item.name)//检查用户的输入
-
+      
       if(isRule){
       passenger[0].trigger = true//触发车辆搜索事件
       let preseconds = Date.now()
+      let watchTime = 0;//标识数据监测的次数，确保其监测次数至少>=2(解决司机的位置一开始就在乘客搜索范围的场景)
+
       //watchEffect可以智能的监测你想要监测的数据  
-      let unwatch =  watchEffect(()=>search(unwatch,preseconds))//传入自身的取消监视函数
+      let unwatch =  watchEffect(()=>search(unwatch,preseconds,watchTime++))//传入自身的取消监视函数
       }
+
       else{
         alert('您输入的地址不在服务区哦，请重新输入')
       }
     }
 
       return {
-        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,updateMargin,region,getMargin,activeDriver,start
+        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,updateMargin,region,getMargin,activeDriver,start,timer
       }
     },
     
@@ -238,19 +282,9 @@ export default {
   },
   mounted(){
     this.$mybus.on('start',this.start)//全局事件总线注册
-
-    let dirver = this.dirver;
-      //设置司机随机移动的行为
-      function timer(){
-       for(let i = 0;i<dirver.length;i++){
-        dirver[i].time = setInterval(()=>{
-          dirver[i].x = Math.floor(Math.random()*(820-150)) + 150;
-          dirver[i].y = Math.floor(Math.random()*(420-50)) + 50;  
-      },3000)
-       }
-    }
     
-    timer()   
+    //挂载后(页面渲染完成后)开启定时器
+    this.timer()   
     // clearInterval(dirver[0].time)
 
   }

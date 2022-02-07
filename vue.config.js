@@ -3,13 +3,14 @@ module.exports = {
         index: {
             //入口
             entry: 'src/main.js',
-        }
+        },
     },
     lintOnSave: true, // 语法检查
     //开启代理服务器（方法一）
-    // devServer: {
-    // proxy:'http://localhost:发送请求的目的端口号'    
-    // }
+    devServer: {
+        proxy: 'http://localhost:9090'
+    }
+
 
     //开启服务器(方式二)
     // devServer: {

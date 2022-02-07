@@ -26,7 +26,8 @@ export default {
     let  infoList = reactive([...""])//用于配合v-for遍历input的输入框
 
      function  onSubmit(values) {
-      console.log('submit', values);
+      console.log('submit', values.姓名)
+      
       $router.push({
          name:'denglu'
       })
