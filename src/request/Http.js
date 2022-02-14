@@ -19,7 +19,6 @@ export function get(url, params) {
         axios.get(url, {
             params: params
         }).then(res => {
-            console.log(res.data)
             resolve(res.data);
         }).catch(err => {
             reject(err.data)

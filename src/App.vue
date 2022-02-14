@@ -1,9 +1,10 @@
 <template>
   <div id="app" class="wrap" >
+    
+  <Passenger v-show="isPassenger" isPassenger="isPassenger"></Passenger>
+  <Banner v-show="!isAdmin && !isPassenger"   v-on:click="MyShow"></Banner>
 
-  <Banner v-show="!isAdmin"  v-on:click="MyShow"></Banner>
-
-  <AdminBanner v-show="isAdmin" v-on:click="MyShow" ></AdminBanner> 
+  <AdminBanner v-show="isAdmin" isAdmin="isAdmin"  v-on:click="MyShow" ></AdminBanner> 
 
       <router-view >
 
@@ -19,15 +20,18 @@
 <script>
 import Banner from "./components/Banner";
 import AdminBanner from "./components/AdminBanner"
-import {ref,toRef} from 'vue'
+import Passenger from "./components/Passenger"
+import {ref} from 'vue'
 export default {
   name: "App",
   components: {
     Banner,
-    AdminBanner
+    AdminBanner,
+    Passenger
   },
   setup(){
     let isAdmin = ref(false)
+    let isPassenger  = ref(false)
 
     function test(info){
         console.log("111")
@@ -40,16 +44,29 @@ export default {
     }
 
       //改变登录状态
-      function changeStatus(status) {
-        console.log(isAdmin.value)
-        isAdmin.value = status
+      function changeStatus(info) {
+        if(info.name == "admin") {
+          isAdmin.value = !info.status
+        }else{
+          isPassenger.value = !info.status
+        }
     }
 
-    return {test,MyShow,isAdmin,changeStatus}
+    //退出登录
+    function leave(info){
+      if(info=="isPassenger"){
+        isPassenger.value = false
+      }else{ 
+        isAdmin.value = false
+      }
+    }
+
+    return {test,MyShow,isAdmin,changeStatus,isPassenger,leave}
   },
   mounted(){
        this.$mybus.on('test',this.test)
        this.$mybus.on('changeBanner',this.changeStatus)
+       this.$mybus.on('leave',this.leave)
     }  
 };
 </script>

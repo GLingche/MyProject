@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.PassengerMapper">
+
+    <select id="selectColor" resultType="com.example.demo.entity.Driver">
+        select * from driver
+        <where>
+            <if test="id != null">
+                id = #{id}
+            </if>
+        </where>
+    </select>
+
+
+    <select id="selectInfo" resultType="java.util.HashMap">
+        select * from driver
+        limit 1;
+    </select>
+
+    <insert id="registerInfo" parameterType="com.example.demo.entity.Passenger">
+        insert into passenger set
+       `name` = #{name},
+        account = #{account},
+        password = #{password},
+        identity_id = #{identityID},
+        sex = #{sex},
+        age = #{age};
+    </insert>
+
+</mapper>

@@ -20,14 +20,13 @@ import { useRouter , useRoute} from 'vue-router'
 export default {
     name:'Register',
     props:['registerInfo'],
-    
-    setup(){
+    setup(props){
     const $router = useRouter()//vue3中使用编程式路由
-    let  infoList = reactive([...""])//用于配合v-for遍历input的输入框
+    let  infoList = reactive([...""])//用于配合v-for遍历input的输入框   
 
      function  onSubmit(values) {
-      console.log('submit', values.姓名)
-      
+       
+      console.log('submit', values)
       $router.push({
          name:'denglu'
       })

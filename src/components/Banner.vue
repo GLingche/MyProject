@@ -3,12 +3,12 @@
 		<h2><van-icon class-prefix="my-icon" name="extra" />灵车出行</h2>
 		<ul>
 			<li>
-				<select @click="loginShow">
+				<select @click="loginShow" class="banner">
 						<option v-for="(v,index) in loginKeys" :key="index" :value="v" >{{v}}</option>
 				</select>
 			</li>
 			<li>
-				<select @click="registerShow">	
+				<select @click="registerShow" class="banner">	
 					<option v-for="(v,index) in registerKeys" :key="index" :value="v" >{{v}}</option>
 				</select>
 				</li>
@@ -32,8 +32,8 @@ export default {
   emits:['click'],//vue3声明自定义click事件，覆盖默认行为，native被弃用
  setup(){
 	const loginKeys = reactive(["乘客登录","驾驶员登录","管理员登录"])
-    const registerKeys = reactive(["乘客注册","驾驶员注册"])
-	const userInfo = reactive([["姓名","性别","年龄","身份证号","账号","密码"],["姓名","性别","年龄","身份证号","账号","密码","车辆颜色","车型","车辆编号","车龄"]])
+    const registerKeys = reactive(["乘客注册","驾驶员注册","车辆注册"])
+	const userInfo = reactive([["姓名","性别","年龄","身份证号","账号","密码"],["姓名","性别","年龄","身份证号","账号","密码"],["车辆颜色","车型","车辆编号","车龄"]])
 
 	const $router = useRouter()//vue3中使用编程式路由
 	// const $route = useRoute()
@@ -45,7 +45,7 @@ export default {
 	}
 
 
-	//登录界面展示
+	//登录界面展示	
 	const loginShow = (value)=>{
 		$router.push({
 			name:'denglu',
@@ -65,8 +65,14 @@ export default {
 					registerInfo:userInfo[0],	
 			}
 		})
-		}
-		else{
+		}else if(value.target.value=='车辆注册'){
+			 	$router.push({
+					 name:'zhuce',
+					 params:{
+						 registerInfo:userInfo[2],
+					 }
+				 })
+		}else{
 			$router.push({
 			name:'zhuce',
 			params:{
@@ -74,7 +80,6 @@ export default {
 			}
 		})
 		}
-
 	}
 	
 	return {loginShow,registerShow,test,loginKeys,registerKeys,userInfo}
@@ -107,9 +112,9 @@ export default {
     	padding:0 19px;
     	line-height:70px;
    		color:#000;
-    	cursor:pointer;
 	}
-	li:hover{
+	li .banner:hover{
+	cursor:pointer;
 	background:#000;
     text-decoration:none;
     color:#ddd;

@@ -2,26 +2,10 @@
     <div class="m_top">
         <h2><van-icon class-prefix="my-icon" name="extra" />灵车出行</h2>
 		<ul>
-			<li>
-				<span>欢迎您xxx</span>
-				<van-icon class-prefix="my-icon2" name="extra" />
-				<button class="leave" @click="leave">退出</button>
-			</li>
-			
-			<li>
-				
-				<select @click="extend" class="banner">
-						<option v-for="(v,index) in range" :key="index" :value="v" >{{v}}</option>
-				</select>
-			</li>
-			<li>
-				<select @click="loginShow" class="banner">
-						<option v-for="(v,index) in record" :key="index" :value="v" >{{v}}</option>
-				</select>
-			</li>
+            <li><button class="leave" @click="leave">退出</button></li>
+			<li><van-icon class-prefix="my-icon2" name="extra" /></li>
+            <li><span>欢迎您xxx</span></li>
 		</ul>
-
-
     </div>
 </template>
 
@@ -29,23 +13,17 @@
 import { getCurrentInstance ,reactive} from "vue";
 
 export default {
-	props:['isAdmin'],
+    props:['isPassenger'],
 	name:'AdminBanner',
-	emits:['click'],//vue3声明自定义click事件，覆盖默认行为，native被弃用
 	setup(props){
 		const {proxy} = getCurrentInstance();//获取当前vue对象的代理实例
-		let range = reactive(["扩大范围","缩短范围"])
-		let record = reactive(["导出乘客信息","导出司机信息"])
-
-		const extend = (value) =>{
-			proxy.$mybus.emit('mapExtend',value.target.value)
-		}
-		
+       
+        	
 		const leave = () => {
-			proxy.$mybus.emit('leave',props.isAdmin.toString())
+			proxy.$mybus.emit('leave',props.isPassenger.toString())
 		}
 
-		return {range,record,extend,leave}	
+		return {leave}	
 	}
 }
 </script>
@@ -77,12 +55,7 @@ export default {
    		color:#000;
     	
 	}
-	li .banner:hover{
-	cursor:pointer;
-	background:#000;
-    text-decoration:none;
-    color:#ddd;
-	}
+ 
 	select{
 		background: rgba(255, 255, 255, 0.2);
 		border:none;
@@ -91,6 +64,7 @@ export default {
 		background: rgba(255, 255, 255, 0.2);
 	}
 	.leave{
+         cursor:pointer;
 		background: rgba(255, 255, 255, 0.2);
 		border:none;
 	}

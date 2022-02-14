@@ -1,13 +1,13 @@
 package com.example.demo.mapper;
 
-import com.example.demo.pojo.User;
+import com.example.demo.entity.Admin;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
-public interface UserMapper {
-
-    List<User> selectUser(Integer id);
+public interface AdminMapper {
+    List<Admin> login();
 
 }

@@ -302,8 +302,7 @@ export default {
           let time
           this.dirver.push({x:dirverX,y:dirverY,time,driverAge,isService:false})          
        }
-
-       
+      
     setTimeout(()=>{
         this.beaginSite = this.sites[randomIndex]
     },2000)
