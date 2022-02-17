@@ -4,26 +4,41 @@
 		<ul>
             <li><button class="leave" @click="leave">退出</button></li>
 			<li><van-icon class-prefix="my-icon2" name="extra" /></li>
-            <li><span>欢迎您xxx</span></li>
+            <li><span v-text="`欢迎您&nbsp${passengerName.name}`"></span></li>
 		</ul>
     </div>
 </template>
 
 <script>
-import { getCurrentInstance ,reactive} from "vue";
+import { getCurrentInstance ,ref,reactive }from "vue";
+import {passengerUnLogin} from '../request/Api'
 
 export default {
     props:['isPassenger'],
-	name:'AdminBanner',
+	name:'PassengerBanner',
 	setup(props){
 		const {proxy} = getCurrentInstance();//获取当前vue对象的代理实例
-       
+		let passengerName = reactive({name:null})
+		let passengerInfo = reactive({values:null})
         	
 		const leave = () => {
+			let	values = passengerInfo.values		
+			passengerUnLogin({
+				values
+			}).then(res=>{
+
+			})
 			proxy.$mybus.emit('leave',props.isPassenger.toString())
 		}
-
-		return {leave}	
+		
+		return {leave,passengerName,passengerInfo}	
+	},
+	mounted() {
+		//获取乘客的信息
+		this.$mybus.on('searchPassengerInfo',(info)=>{
+			this.passengerName.name = info.name
+			this.passengerInfo.values = info	
+		})
 	}
 }
 </script>

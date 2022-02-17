@@ -2,10 +2,29 @@ package com.example.demo.entity;
 
 public class Car {
     private String color,type,code;
-    private Integer age,car_id;
+    private Integer age;
+    private Integer carID;
+
+    public Integer getIsService() {
+        return isService;
+    }
+
+    public void setIsService(Integer isService) {
+        this.isService = isService;
+    }
+
+    private Integer isService;
 
     public String getColor() {
         return color;
+    }
+
+    public Integer getCarID() {
+        return carID;
+    }
+
+    public void setCarID(Integer carID) {
+        this.carID = carID;
     }
 
     public void setColor(String color) {
@@ -36,11 +55,4 @@ public class Car {
         this.age = age;
     }
 
-    public Integer getCar_id() {
-        return car_id;
-    }
-
-    public void setCar_id(Integer car_id) {
-        this.car_id = car_id;
-    }
 }

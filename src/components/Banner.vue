@@ -62,7 +62,8 @@ export default {
 			$router.push({
 					name:'zhuce',
 					params:{
-					registerInfo:userInfo[0],	
+					registerInfo:userInfo[0],
+					registerKeys:registerKeys[0]	
 			}
 		})
 		}else if(value.target.value=='车辆注册'){
@@ -70,13 +71,15 @@ export default {
 					 name:'zhuce',
 					 params:{
 						 registerInfo:userInfo[2],
+						 registerKeys:registerKeys[2]
 					 }
 				 })
 		}else{
 			$router.push({
 			name:'zhuce',
 			params:{
-				registerInfo:userInfo[1],	
+				registerInfo:userInfo[1],
+				registerKeys:registerKeys[1]
 			}
 		})
 		}

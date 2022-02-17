@@ -1,7 +1,7 @@
 package com.example.demo.entity;
 
 public class Address {
-    private Integer id,lotX,lotY;
+    private Integer id,x,y;
     private String name;
 
     public Integer getId() {
@@ -12,20 +12,20 @@ public class Address {
         this.id = id;
     }
 
-    public Integer getLotX() {
-        return lotX;
+    public Integer getX() {
+        return x;
     }
 
-    public void setLotX(Integer lotX) {
-        this.lotX = lotX;
+    public void setX(Integer x) {
+        this.x = x;
     }
 
-    public Integer getLotY() {
-        return lotY;
+    public Integer getY() {
+        return y;
     }
 
-    public void setLotY(Integer lotY) {
-        this.lotY = lotY;
+    public void setY(Integer y) {
+        this.y = y;
     }
 
     public String getName() {

@@ -33,8 +33,9 @@
 
 <script>
 import {reactive,ref,watchEffect} from 'vue'
-import { Toast } from 'vant';
+import { Toast } from 'vant'
 import { useRouter} from 'vue-router'
+import {  searchAddress,searchCarLogin} from '../request/Api'
 export default {
     name:"Start",
     props:['loginStatus'],
@@ -42,14 +43,15 @@ export default {
       const $router = useRouter()//vue3中使用编程式路由
       let active = ref(false)//搜索范围触发条件
       let dirver = reactive([])
+      let carInfo = reactive({values:[{isService:1,age:8,carID:1},{isService:1,age:3,carID:2},{isService:0,age:4,carID:3},]})//车的基本信息(库)
       let passenger = reactive([])
       let beaginSite = ref()
       let endSite = ref()
       let tempSite = reactive({name:'正在获取您的地理位置....'})
       let moveLot = reactive({left:150,right:820,top:50,bottom:420})
-      let sites = reactive([{name:'花都广场',x:470,y:230},{name:'学府路',y:100,x:200},{name:'汇通广场',y:100,x:600},
-      {name:'中西结合医院',y:300,x:200},{name:'白云机场',y:420,x:900}])
+      let sites = reactive([])
 
+  
 
      //改变地图范围
      function mapExtend(value){
@@ -193,7 +195,6 @@ export default {
   //检查乘客输入的地址 并返回该地址的坐标
   function check(){    
       let end = sites.filter((item,index,array) => endSite.value == item.name )//返回的对象会自动转化为Array类型
-      console.log(end[0].x)
       let lot = {endX:end[0].x,endY:end[0].y}
       return lot;
   }
@@ -254,11 +255,11 @@ export default {
           //恢复乘客默认状态
           passenger[0].isServiced = false
           passenger[0].trigger = false
-
           //移动司机的位置
           dirver[index].x = check().endX
           dirver[index].y = check().endY  
           dirver[index].isService = false
+          beaginSite.value.name= endSite.value//改变乘客面板上的初始位置
           claerTimes()//清除所有定时器
           timer()//重新开启定时器
           alert('即将到达目的地，注意检查随身物品，准备下车')
@@ -266,9 +267,9 @@ export default {
     }
 
      //触发事件按钮 
-  function  onSubmit() {
+  function  onSubmit(value) {
       let isRule = sites.some((item,index,array) => endSite.value == item.name)//检查用户的输入
-      
+
       if(isRule){
       passenger[0].trigger = true//触发车辆搜索事件
       let preseconds = Date.now()
@@ -284,36 +285,48 @@ export default {
     }
 
       return {
-        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,updateMargin,region,getMargin,activeDriver,start,timer,active,mapExtend
+        sites,location,dirver,onSubmit,passenger,beaginSite,endSite,tempSite,updateMargin,region,getMargin,activeDriver,start,timer,active,mapExtend,carInfo
       }
     },
     
   created() {
-      //初始乘客位置检索
-      let randomIndex = Math.floor(Math.random()*5) //[0,5)
-      this.beaginSite = this.tempSite
-      this.passenger.push({x:this.sites[randomIndex].x-this.getMargin().marginLeft,y:this.sites[randomIndex].y-this.getMargin().marginTop,Rwidth:160,Rheight:160,isServiced:false,trigger:false})
-
-      //初始化三个司机
-      for(let i =0;i<3;i++){
-          let dirverX = Math.floor(Math.random()*(820-150)) + 150;
-          let dirverY = Math.floor(Math.random()*(420-50)) + 50;
-          let driverAge = Math.floor(Math.random()*6) + 3
-          let time
-          this.dirver.push({x:dirverX,y:dirverY,time,driverAge,isService:false})          
-       }
+      //初始化地址
+      searchAddress().then(res=>{
+        res.code == 5000 ? this.sites = res.values:alert(res.msg)        
+          initPassenger(randomIndex)
+      }) 
       
+        //初始乘客位置检索
+      const initPassenger = (randomIndex)=>{
+        this.passenger.push({x:this.sites[randomIndex].x-this.getMargin().marginLeft,y:this.sites[randomIndex].y-this.getMargin().marginTop,Rwidth:160,Rheight:160,isServiced:false,trigger:false})
+      }
+          
+    //搜索乘客的位置
+    let randomIndex = Math.floor(Math.random()*5) //[0,5) 
+    this.beaginSite = this.tempSite  
     setTimeout(()=>{
         this.beaginSite = this.sites[randomIndex]
-    },2000)
+    },2000)  
 
   },
   mounted(){
     this.$mybus.on('start',this.start)//全局事件总线注册
     this.$mybus.on('mapExtend',this.mapExtend)
-    //挂载后(页面渲染完成后)开启定时器
-    this.timer()   
-    // clearInterval(dirver[0].time)
+    searchCarLogin().then(res=>{
+      this.carInfo.values = res
+          //初始化三个司机
+      for(let i =0;i<this.carInfo.values.length;i++){
+          let dirverX = Math.floor(Math.random()*(820-150)) + 150
+          let dirverY = Math.floor(Math.random()*(420-50)) + 50
+          let driverAge = this.carInfo.values[i].age
+          let isService = this.carInfo.values[i].isService
+          let carID = this.carInfo.values[i].carID
+          let time
+          this.dirver.push({x:dirverX,y:dirverY,time,driverAge,isService,carID})     
+       }
+        //挂载后(页面渲染完成后)开启定时器
+         this.timer()   
+    })
 
   }
 

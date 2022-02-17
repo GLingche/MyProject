@@ -2,7 +2,7 @@ package com.example.demo.entity;
 
 public class Driver {
     private String name,sex,password;
-    private Integer account,age,identity_id,car_id,status;
+    private Integer account,age,identity_id,carID,status;
 
     public String getName() {
         return name;
@@ -52,12 +52,12 @@ public class Driver {
         this.identity_id = identity_id;
     }
 
-    public Integer getCar_id() {
-        return car_id;
+    public Integer getCarID() {
+        return carID;
     }
 
-    public void setCar_id(Integer car_id) {
-        this.car_id = car_id;
+    public void setCarID(Integer carID) {
+        this.carID = carID;
     }
 
     public Integer getStatus() {

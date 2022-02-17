@@ -7,12 +7,12 @@
     <form @submit="onSubmit">
         <div class="form_input">
             <span>usename:</span>
-            <input class="sign-text" type="text" v-model="infoList.account" name="usename" placeholder="请输入用户名">
+            <input class="sign-text" type="text" v-model="values.account" name="usename" placeholder="请输入用户名">
         </div>
 
         <div class="form_input">
             <span> password:</span>
-            <input class="sign-text" type="text" v-model="infoList.password" name="password" placeholder="请输入密码">
+            <input class="sign-text" type="text" v-model="values.password" name="password" placeholder="请输入密码">
         </div>
 
         <div class="form_input">
@@ -28,14 +28,14 @@
 import axios from 'axios'
 import { useRouter} from 'vue-router'
 import {getCurrentInstance,ref,reactive} from 'vue'
-import { apiAddress } from '../request/Api'
+import {adminLogin,passengerLogin,driverLogin} from '../request/Api'
 export default {
     name:'Login',
     props:['title'],
     setup(props){
         const $router = useRouter()//vue3中使用编程式路由
         let initTitle = "乘客登录"
-        let infoList = reactive({
+        let values = reactive({
             account:null,
             password:null
         })
@@ -43,34 +43,24 @@ export default {
         let loginStatus = false
         let Admin = reactive({name:"admin"},{status:false})
         let Passenger = reactive({name:"passenger"},{status:false})
+        let Driver = reactive({name:'driver'},{status:false})
 
         const {proxy} = getCurrentInstance();//获取当前vue对象的代理实例
 
         function ChangeBanner(info) {
-            console.log("@4")
-            console.log(info)
             proxy.$mybus.emit('changeBanner',info)
         }
 
-        function sendAxios() {
-            apiAddress({               
-                    id: 1
-            }).then(
-                response =>{
-                    console.log('请求成功了',response)
-                },
-                error => {
-                    console.log('请求失败了',error.message)
-                }
-            )
-        }
-
-        function onSubmit(value){
-            console.log(JSON.stringify(infoList))
-            let tempInfoLsit = JSON.stringify(infoList)
-            console.log(JSON.parse(tempInfoLsit))
+        function onSubmit(){
+            values.account = parseInt(values.account)  
             if(props.title=="管理员登录"){
                  ChangeBanner(Admin)
+                 adminLogin({
+                     values
+                 }).then(res=>{
+                     alert(res.msg)
+                     proxy.$mybus.emit('searchAdminInfo',res.values)
+                 })
             }
             /*
              由于默认值initTitle不随title的值改变,这里加多一层if判断
@@ -78,6 +68,13 @@ export default {
             */
            else if(props.title=="乘客登录" || initTitle=="乘客登录"){
                 if(props.title == "驾驶员登录"){
+                driverLogin({
+                     values
+                 }).then(res=>{
+                     alert(res.msg)
+                     proxy.$mybus.emit('searchDriverInfo',res.values)
+                 })
+                    ChangeBanner(Driver)
                     $router.push({
                             name:'chufa',
                             params:{
@@ -86,6 +83,12 @@ export default {
                     })
                     return
                 }
+                   passengerLogin({
+                     values
+                 }).then(res=>{
+                     alert(res.msg)
+                     proxy.$mybus.emit('searchPassengerInfo',res.values)
+                 })
                 ChangeBanner(Passenger)
             }
             $router.push({
@@ -96,7 +99,7 @@ export default {
             })
         }
 
-        return {onSubmit,initTitle,infoList,Admin,Passenger}
+        return {onSubmit,initTitle,values,Admin,Passenger}
     }   
 }
 </script>

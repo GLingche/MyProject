@@ -6,6 +6,16 @@ public class Admin {
     private Integer account,status,id;
     private String password;
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    private String name;
+
     public Integer getId() {
         return id;
     }

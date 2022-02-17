@@ -4,7 +4,6 @@
 
     <select id="selectInfo" resultType="java.util.HashMap">
         select * from driver
-        limit 1;
     </select>
 
 
@@ -19,11 +18,19 @@
         </insert>
 
 
-        <update id="login" parameterType="com.example.demo.entity.Driver">
-                update driver
-                <set>
+    <select id="login" resultType="com.example.demo.entity.Driver">
+        select * from driver
+        <where>
+            <if test="account!=null">account=#{account}</if>
+        </where>
+    </select>
 
-                </set>
-        </update>
+    <update id="updateLoginStatus" parameterType="com.example.demo.entity.Driver">
+        update driver
+        <set>
+            <if test="status!=null">status=#{status}</if>
+        </set>
+        where account = #{account}
+    </update>
 
 </mapper>

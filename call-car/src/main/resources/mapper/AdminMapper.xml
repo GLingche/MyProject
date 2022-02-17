@@ -3,7 +3,22 @@
 <mapper namespace="com.example.demo.mapper.AdminMapper">
 
     <select id="login" resultType="com.example.demo.entity.Admin">
-            select * from admin
+        select * from `admin`
+        <where>
+            <if test="account!=null">account=#{account}</if>
+        </where>
     </select>
+
+    <select id="searchAddress" resultType="com.example.demo.entity.Address">
+        select * from address
+    </select>
+
+    <update id="updateLoginStatus" parameterType="com.example.demo.entity.Admin">
+        update `admin`
+        <set>
+            <if test="status!=null">status=#{status}</if>
+        </set>
+        where account = #{account}
+    </update>
 
 </mapper>

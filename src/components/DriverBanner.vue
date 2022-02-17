@@ -2,71 +2,43 @@
     <div class="m_top">
         <h2><van-icon class-prefix="my-icon" name="extra" />灵车出行</h2>
 		<ul>
-			<li>
-				<span v-text="`欢迎您&nbsp${adminName.name}`"></span>
-				<van-icon class-prefix="my-icon2" name="extra" />
-				<button class="leave" @click="leave">退出</button>
-			</li>
-			
-			<li>
-				
-				<select @click="extend" class="banner">
-						<option v-for="(v,index) in range" :key="index" :value="v" >{{v}}</option>
-				</select>
-			</li>
-			<li>
-				<select @click="loginShow" class="banner">
-						<option v-for="(v,index) in record" :key="index" :value="v" >{{v}}</option>
-				</select>
-			</li>
+            <li><button class="leave" @click="leave">退出</button></li>
+			<li><van-icon class-prefix="my-icon2" name="extra" /></li>
+            <li><span v-text="`欢迎您&nbsp${driverInfo.name}`"></span></li>
 		</ul>
-
-
     </div>
 </template>
 
 <script>
-import { getCurrentInstance ,reactive} from "vue";
-import {adminUnLogin} from '../request/Api'
+import { getCurrentInstance ,ref,reactive}from "vue";
+import {driverUnLogin} from '../request/Api'
 export default {
-	props:['isAdmin'],
-	name:'AdminBanner',
-	emits:['click'],//vue3声明自定义click事件，覆盖默认行为，native被弃用
+    props:['isDriver'],
+	name:'DriverBanner',
 	setup(props){
 		const {proxy} = getCurrentInstance();//获取当前vue对象的代理实例
-		let range = reactive(["扩大范围","缩短范围"])
-		let record = reactive(["导出乘客信息","导出司机信息"])
-		let adminName = reactive({name:null})
-		let adminInfo = reactive({values:null})
-
-			const leave = () => {
-			let	values = adminInfo.values
-				
-			adminUnLogin({
+		let driverName = reactive({name:null})
+		let driverInfo = reactive({values:null})
+        	
+		const leave = () => {
+			let	values = driverInfo.values		
+			driverUnLogin({
 				values
 			}).then(res=>{
 
 			})
-			proxy.$mybus.emit('leave',props.isAdmin.toString())
+			proxy.$mybus.emit('leave',props.isDriver.toString())
 		}
 
-		const extend = (value) =>{
-			proxy.$mybus.emit('mapExtend',value.target.value)
-		}
-		
-	
-
-		return {range,record,extend,leave,adminName,adminInfo}	
+		return {leave,driverName,driverInfo}	
 	},
-		mounted() {
-		//获取管理员的信息
-		this.$mybus.on('searchAdminInfo',(value)=>{		
-			this.adminName.name =value.name
-			this.adminInfo.values = value		
+	mounted() {
+		//获取司机的信息
+		this.$mybus.on('searchDriverInfo',(info)=>{
+			this.driverInfo.name = info.name
+			this.driverInfo.values = info
 		})
-			
 	}
-
 }
 </script>
 
@@ -97,12 +69,7 @@ export default {
    		color:#000;
     	
 	}
-	li .banner:hover{
-	cursor:pointer;
-	background:#000;
-    text-decoration:none;
-    color:#ddd;
-	}
+ 
 	select{
 		background: rgba(255, 255, 255, 0.2);
 		border:none;
@@ -111,6 +78,7 @@ export default {
 		background: rgba(255, 255, 255, 0.2);
 	}
 	.leave{
+         cursor:pointer;
 		background: rgba(255, 255, 255, 0.2);
 		border:none;
 	}

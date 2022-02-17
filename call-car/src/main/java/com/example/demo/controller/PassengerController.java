@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.controller.bean.ResultBean;
 import com.example.demo.service.PassengerService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,12 +16,17 @@ public class PassengerController {
     @Autowired
     PassengerService passengerService;
 
-    @RequestMapping("/selectColor")
-    public String selectColor(Integer id){return passengerService.selectColor(id);}
 
     @RequestMapping("/registerInfo")
     public void insertInfo(@RequestBody Map<String,Object> passengerInfo){
         passengerService.registerInfo(passengerInfo);
     }
 
+    @RequestMapping("/login")
+    public ResultBean login(@RequestBody Map<String,Object> map){
+        return passengerService.login(map);
+    }
+
+    @RequestMapping("/unLogin")
+    public void unLogin( @RequestBody Map<String,Object> map){passengerService.updateLoginStatus((Integer)map.get("account"), 0);}
 }

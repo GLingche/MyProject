@@ -1,5 +1,6 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.controller.bean.ResultBean;
 import com.example.demo.mapper.PassengerMapper;
 import com.example.demo.service.PassengerService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,14 +15,13 @@ public class PassengerServiceImpl implements PassengerService {
     @Autowired
     PassengerMapper passengerMapper;
 
-    @Override
-    public String selectColor(Integer id) {
-        return passengerMapper.selectColor((id));
-    }
 
     @Override
-    public HashMap<String,Object> selectInfo() {
-        return passengerMapper.selectInfo();
+    public ResultBean login(Map<String, Object> map) {
+        if(passengerMapper.login((Integer) map.get("account")) == null){
+            return new ResultBean(5002,false,"账号不存在");
+        }
+        return  new UserImpl().passengerCheckLogin(passengerMapper,map,passengerMapper.login((Integer) map.get("account")).getPassword());
     }
 
     @Override
@@ -29,5 +29,10 @@ public class PassengerServiceImpl implements PassengerService {
         passengerMapper.registerInfo(passengerInfo);
     }
 
+
+    @Override
+    public void updateLoginStatus(Integer account, Integer status) {
+        passengerMapper.updateLoginStatus(account,status);
+    }
 
 }
