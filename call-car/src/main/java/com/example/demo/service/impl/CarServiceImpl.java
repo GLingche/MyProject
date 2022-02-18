@@ -1,6 +1,7 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.entity.Car;
+import com.example.demo.entity.DriverIntroduce;
 import com.example.demo.mapper.CarMapper;
 import com.example.demo.service.CarService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,5 +23,15 @@ public class CarServiceImpl implements CarService {
     @Override
     public List<Car> searchInfo() {
         return carMapper.searchInfo();
+    }
+
+    @Override
+    public void updateServiceStatus(Object carID,Object isService) {
+         carMapper.updateServiceStatus(carID,isService);
+    }
+
+    @Override
+    public List<DriverIntroduce> searchIntroduce(Integer carID) {
+        return carMapper.searchIntroduce(carID);
     }
 }

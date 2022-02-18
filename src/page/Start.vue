@@ -1,7 +1,7 @@
 <template>
   <div class="map">
     <router-view></router-view> 
-      <div class="sites" v-for="(item,index) in sites" :key="index" :style="location(item.x,item.y)">
+      <div class="sites" v-for="(item,index) in sites.values" :key="index" :style="location(item.x,item.y)">
         <van-icon name="location-o" color="#f40" size="40"/>
         <span>{{item.name}}</span>
       </div>
@@ -35,7 +35,7 @@
 import {reactive,ref,watchEffect} from 'vue'
 import { Toast } from 'vant'
 import { useRouter} from 'vue-router'
-import {  searchAddress,searchCarLogin} from '../request/Api'
+import {  searchAddress,searchCarLogin,updateServiceStatus} from '../request/Api'
 export default {
     name:"Start",
     props:['loginStatus'],
@@ -49,8 +49,8 @@ export default {
       let endSite = ref()
       let tempSite = reactive({name:'正在获取您的地理位置....'})
       let moveLot = reactive({left:150,right:820,top:50,bottom:420})
-      let sites = reactive([])
-
+      let sites = reactive({values:[]})
+     
   
 
      //改变地图范围
@@ -194,19 +194,20 @@ export default {
 
   //检查乘客输入的地址 并返回该地址的坐标
   function check(){    
-      let end = sites.filter((item,index,array) => endSite.value == item.name )//返回的对象会自动转化为Array类型
+      let end = sites.values.filter((item,index,array) => endSite.value == item.name )//返回的对象会自动转化为Array类型
       let lot = {endX:end[0].x,endY:end[0].y}
       return lot;
   }
 
-
+     let tempDriverList = [] //用来存储在搜索范围的司机
+     let tempMap = new Map()//用来简历司机下标与年龄的联系
+     let isDone = false //是否搜索完毕
     /**
      * 判断司机是否在乘客约车范围
      * 若是：则将其isService属性置为true
      */
-    function search(unwatch,preseconds,watchTime){
+    function search(unwatch,preseconds,watchTime,driverLength){
         let updateseconds = Date.now()
-
         if(updateseconds-preseconds>2000){
             extend()//延长搜索范围
             preseconds = updateseconds
@@ -218,29 +219,46 @@ export default {
           let lotY = passenger[0].y + getMargin().marginTop
           //vue2中由于代理的映射需要时间去完全映射数组里所有的对象  用setTimeout可以解决一开始undefine的问题   setTimeout(()=>{})
           
-            for(let i = 0;i<3;i++){
+            for(let i = 0;i<driverLength;i++){
                 let dx = lotX > dirver[i].x?lotX - dirver[i].x : dirver[i].x - lotX
                 let dy = lotY > dirver[i].y?lotY - dirver[i].y : dirver[i].y - lotY 
                 let distance = Math.floor(Math.hypot(dx,dy))  // 函数返回所有平方英寸的平方根
-                if(distance<=radius&&watchTime>=1){
-                  // console.log("successful")
+                if(distance<=radius&&watchTime>=1&&!dirver[i].isService){
+                    tempDriverList.splice(0,0,dirver[i].age)//存储司机的年龄
+                    tempMap.set(dirver[i].age,i)//建立司机年龄与下标的联系
+                    isDone = true      
+                }            
+            }
+            
+            if(isDone){
+                  tempDriverList.sort((a,b) => a<b ? 1:a>b ? -1 :0)//年龄从大到小排序
                   Toast.clear()
                   unwatch()//取消监视
-                  dirver[i].isService = true
+                  isDone = false
+                  let i = tempMap.get(tempDriverList[0])//最大年龄的司机下标
+                  //改变司机的服务状态  
+                  dirver[i].isService = 1
+                  updateServiceStatus({
+                    values:{
+                      carID : dirver[i].carID,
+                      isService : dirver[i].isService
+                    }
+                  })
+                   
+
                   clearInterval(dirver[i].time)
                   $router.push({
                         name:'jieshao',
                         params:{
-                          index:i
+                          index:i,
+                          carID : dirver[i].carID,
                         }
                       })  
-                  break;
-                }            
-            } 
+            }
     }
 
     //出发前往目的地
-    function start(index){
+    function start(info){
       passenger[0].isServiced = true;
 
       let useTime = Math.floor(Math.random()*(5000-3000)) +3000//随机用车时间(3s-5s)
@@ -256,9 +274,18 @@ export default {
           passenger[0].isServiced = false
           passenger[0].trigger = false
           //移动司机的位置
-          dirver[index].x = check().endX
-          dirver[index].y = check().endY  
-          dirver[index].isService = false
+          dirver[info.index].x = check().endX
+          dirver[info.index].y = check().endY  
+          dirver[info.index].isService = false
+          //恢复司机的服务状态
+          dirver[info.index].isService = 0
+          updateServiceStatus({
+                    values:{
+                      carID : info.carID,
+                      isService : 0
+                    }
+                  })
+          
           beaginSite.value.name= endSite.value//改变乘客面板上的初始位置
           claerTimes()//清除所有定时器
           timer()//重新开启定时器
@@ -268,20 +295,27 @@ export default {
 
      //触发事件按钮 
   function  onSubmit(value) {
-      let isRule = sites.some((item,index,array) => endSite.value == item.name)//检查用户的输入
-
+   
+     
+      if( props.loginStatus){
+         let isRule = sites.values.some((item,index,array) => endSite.value == item.name)//检查用户的输入
       if(isRule){
       passenger[0].trigger = true//触发车辆搜索事件
       let preseconds = Date.now()
       let watchTime = 0;//标识数据监测的次数，确保其监测次数至少>=2(解决司机的位置一开始就在乘客搜索范围的场景)
-
+  
       //watchEffect可以智能的监测你想要监测的数据  
-      let unwatch =  watchEffect(()=>search(unwatch,preseconds,watchTime++))//传入自身的取消监视函数
+      let unwatch =  watchEffect(()=>search(unwatch,preseconds,watchTime++,dirver.length))//传入自身的取消监视函数
       }
 
       else{
         alert('您输入的地址不在服务区哦,请重新输入')
       }
+
+      }else{
+        alert('请先登录哦！！')
+      }
+
     }
 
       return {
@@ -292,20 +326,20 @@ export default {
   created() {
       //初始化地址
       searchAddress().then(res=>{
-        res.code == 5000 ? this.sites = res.values:alert(res.msg)        
+        res.code == 5000 ? this.sites.values = res.values:alert(res.msg)        
           initPassenger(randomIndex)
       }) 
       
         //初始乘客位置检索
       const initPassenger = (randomIndex)=>{
-        this.passenger.push({x:this.sites[randomIndex].x-this.getMargin().marginLeft,y:this.sites[randomIndex].y-this.getMargin().marginTop,Rwidth:160,Rheight:160,isServiced:false,trigger:false})
+        this.passenger.push({x:this.sites.values[randomIndex].x-this.getMargin().marginLeft,y:this.sites.values[randomIndex].y-this.getMargin().marginTop,Rwidth:160,Rheight:160,isServiced:false,trigger:false})
       }
           
     //搜索乘客的位置
     let randomIndex = Math.floor(Math.random()*5) //[0,5) 
     this.beaginSite = this.tempSite  
     setTimeout(()=>{
-        this.beaginSite = this.sites[randomIndex]
+        this.beaginSite = this.sites.values[randomIndex]
     },2000)  
 
   },
@@ -314,7 +348,7 @@ export default {
     this.$mybus.on('mapExtend',this.mapExtend)
     searchCarLogin().then(res=>{
       this.carInfo.values = res
-          //初始化三个司机
+          //从库中找登录状态为1的司机
       for(let i =0;i<this.carInfo.values.length;i++){
           let dirverX = Math.floor(Math.random()*(820-150)) + 150
           let dirverY = Math.floor(Math.random()*(420-50)) + 50
@@ -327,9 +361,7 @@ export default {
         //挂载后(页面渲染完成后)开启定时器
          this.timer()   
     })
-
   }
-
 }
 </script>
 

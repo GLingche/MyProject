@@ -2,11 +2,7 @@
     <div class="warp">
         <van-icon class-prefix="my-icon" name="extra" />
          <div class="info">
-            <span>姓名:fda</span>
-             <span>姓名:</span>
-              <span>姓名:</span>
-               <span>姓名:</span>
-                <span>姓名:</span> 
+           <span v-for="(item,index) in columnName" :key="index" :value="item">{{item}}{{colunmValues.values[index]}}</span>
         </div> 
 
       <van-button type="primary" round size="normal"  @click="close"><van-icon name="cross" size="40" /></van-button>
@@ -17,21 +13,48 @@
 <script>
 import { useRouter} from 'vue-router'
 import { getCurrentInstance ,reactive} from "vue";
+import {searchIntroduce} from '../request/Api'
 export default {
     name:"Resume",
-    props:['index'],
+    props:['index','carID'],
     setup(props){
         const { proxy } = getCurrentInstance();//获取当前vue对象的代理实例
         const $router = useRouter()//vue3中使用编程式路由
+        const columnName = ["姓名:","车辆类型:","车牌号:","颜色:","车龄:"]//司机基本信息
+        let colunmValues = reactive({values:[]})//内容
+        let carID
+        let indexInfo
+
+        //接收栏目内容
+        if((carID = props.carID)!==undefined){
+            searchIntroduce({
+                carID
+            }).then(res=>{
+                //用迭代器来打平数组
+                const iter ={
+                *[Symbol.iterator](){
+                    yield res[0].name
+                    yield res[0].type
+                    yield res[0].code
+                    yield res[0].color
+                    yield res[0].age
+                    }
+                 }
+                colunmValues.values = Array.from(iter)
+            })
+
+           indexInfo = {index:props.index,carID:props.carID}
+        }
+
         function close(){
-            proxy.$mybus.emit('start',props.index)
+            proxy.$mybus.emit('start',indexInfo)
             $router.push({
 			name:'chufa',
 		})
-        }
-
-        return {close}
     }
+
+        return {close,columnName,colunmValues}
+    },
 }
 </script>
 

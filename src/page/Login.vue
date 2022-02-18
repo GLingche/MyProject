@@ -61,6 +61,12 @@ export default {
                      alert(res.msg)
                      proxy.$mybus.emit('searchAdminInfo',res.values)
                  })
+                   $router.push({
+                name:'chufa',
+                params:{
+                    loginStatus
+                }
+            })
             }
             /*
              由于默认值initTitle不随title的值改变,这里加多一层if判断
@@ -88,15 +94,17 @@ export default {
                  }).then(res=>{
                      alert(res.msg)
                      proxy.$mybus.emit('searchPassengerInfo',res.values)
+                     loginStatus = res.values.status
+                       $router.push({
+                        name:'chufa',
+                        params:{
+                            loginStatus
+                        }
+                    })
                  })
                 ChangeBanner(Passenger)
             }
-            $router.push({
-                name:'chufa',
-                params:{
-                    loginStatus
-                }
-            })
+          
         }
 
         return {onSubmit,initTitle,values,Admin,Passenger}

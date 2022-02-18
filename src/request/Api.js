@@ -36,5 +36,10 @@ export const driverUnLogin = p => post('/driver/unLogin',p)
 
 //查询登录状态的车辆
 export const searchCarLogin = p =>get('/car/searchInfo',p)
+//更新车辆服务状态
+export const updateServiceStatus = p =>post('/car/updateServiceStatus',p)
+//获取车辆介绍栏目信息
+export const searchIntroduce = p => get('/car/searchIntroduce',p)
+
 
 

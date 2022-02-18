@@ -15,4 +15,20 @@
             on c.carID = p.carID
             where status = 1
     </select>
+
+    <update id="updateServiceStatus" parameterType="com.example.demo.entity.Car">
+        update car
+        <set>
+            <if test="isService!=null">isService=#{isService}</if>
+        </set>
+        where carID = #{carID}
+    </update>
+
+    <select id="searchIntroduce" resultType="com.example.demo.entity.DriverIntroduce">
+          select `name`,type,c.age,`code`,color from car c
+            inner join driver p
+            on c.carID = p.carID
+            where c.carID = #{carID}
+    </select>
+
 </mapper>
