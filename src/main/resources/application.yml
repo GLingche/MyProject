@@ -1,0 +1,17 @@
+#其实SpringBoot底层会把application.yml文件解析为application.properties
+server:
+  port: 9090
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/call-car?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: 123456
+
+mybatis:
+  #scan mapper
+  mapper-locations: classpath:mapper/*Mapper.xml
+  #scan pojo
+  type-aliases-package: com.example.demo.entity
+

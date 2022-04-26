@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.PassengerMapper">
+
+
+    <select id="selectInfo" resultType="java.util.HashMap">
+        select * from driver
+        limit 1;
+    </select>
+
+    <insert id="registerInfo" parameterType="com.example.demo.entity.Passenger">
+        insert into passenger set
+       `name` = #{name},
+        account = #{account},
+        password = #{password},
+        identity_id = #{identityID},
+        sex = #{sex},
+        age = #{age};
+    </insert>
+
+    <select id="login" resultType="com.example.demo.entity.Passenger">
+        select * from passenger
+        <where>
+            <if test="account!=null">account=#{account}</if>
+        </where>
+    </select>
+
+
+    <update id="updateLoginStatus" parameterType="com.example.demo.entity.Passenger">
+        update passenger
+        <set>
+            <if test="status!=null">status=#{status}</if>
+        </set>
+        where account = #{account}
+    </update>
+
+</mapper>

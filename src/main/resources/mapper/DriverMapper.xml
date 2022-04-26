@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.DriverMapper">
+
+    <select id="selectInfo" resultType="java.util.HashMap">
+        select * from driver
+    </select>
+
+
+        <insert id="registerInfo" parameterType="com.example.demo.entity.Driver">
+                insert into driver set
+                 `name` = #{name},
+                  account = #{account},
+                  sex = #{sex},
+                  age = #{age},
+                  identity_id = #{identityID},
+                  password = #{password};
+        </insert>
+
+
+    <select id="login" resultType="com.example.demo.entity.Driver">
+        select * from driver
+        <where>
+            <if test="account!=null">account=#{account}</if>
+        </where>
+    </select>
+
+    <update id="updateLoginStatus" parameterType="com.example.demo.entity.Driver">
+        update driver
+        <set>
+            <if test="status!=null">status=#{status}</if>
+        </set>
+        where account = #{account}
+    </update>
+
+</mapper>
