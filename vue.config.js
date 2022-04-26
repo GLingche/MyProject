@@ -8,8 +8,9 @@ module.exports = {
     lintOnSave: true, // 语法检查
     //开启代理服务器（方法一）
     devServer: {
-        proxy: 'http://localhost:9090'
-    }
+        proxy: 'http://localhost:9090',
+    },
+    // webpack-dev-server 相关配置
 
 
     //开启服务器(方式二)

@@ -16,7 +16,7 @@
 
 <script>
 import { reactive } from "vue";
-import { useRouter , useRoute} from 'vue-router'
+import { useRouter} from 'vue-router'
 import {registerPassenger,registerDriver,registerCar} from '../request/Api'
 export default {
     name:'Register',
@@ -36,6 +36,14 @@ export default {
       }
     }
 
+    //跳转到登录界面
+    function toLogin(){
+        alert("注册成功!")
+         $router.push({
+                name:'denglu'
+            })
+    }
+
     function mapCar(values){
         return {
            color : values.车辆颜色,
@@ -52,11 +60,8 @@ export default {
             values = mapPeople(values)
             registerPassenger({
             values
-            }).then(res=>{
-              alert("注册成功!")
-                $router.push({
-                name:'denglu'
-            })
+            }).then(res=>{ 
+              toLogin()
       })
     }
       else if(props.registerKeys == '驾驶员注册'){
@@ -64,10 +69,7 @@ export default {
           registerDriver({
                values   
           }).then(res=>{
-            alert("注册成功!")
-                $router.push({
-                name:'denglu'
-            })
+            toLogin()
           })
       }
 
@@ -76,10 +78,7 @@ export default {
          registerCar({
             values
          }) .then(res=>{
-           alert("注册成功!")
-             $router.push({
-                name:'denglu'
-            })
+             toLogin()
          })
       }  
     }

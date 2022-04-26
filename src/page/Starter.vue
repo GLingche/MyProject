@@ -62,6 +62,8 @@ import {
   searchAddress,
   searchCarLogin,
   updateServiceStatus,
+  pushStack,
+  sortCarStack,
 } from "../request/Api";
 export default {
   name: "Start",
@@ -81,12 +83,18 @@ export default {
     let beaginSite = ref();
     let endSite = ref();
     let tempSite = reactive("正在获取您的地理位置....");
-    let moveLot = reactive({ left: 150, right: 820, top: 50, bottom: 420 });//司机的移动范围坐标
+    let moveLot = reactive({ left: 150, right: 820, top: 50, bottom: 420 }); //司机的移动范围坐标
     let sites = reactive({ values: [] });
+    //判断乘客出车是否在服务范围
+    let isRegion = null;
+    //范围边界
+    let mapRegion = { x: 800, y: 300 };
 
     //改变地图范围
     function mapExtend(value) {
       if (value == "扩大范围") {
+        mapRegion.x = 1000;
+        mapRegion.y = 500;
         active.value = true;
 
         //改变司机的移动范围
@@ -97,6 +105,8 @@ export default {
         moveLot.bottom = 470;
         timer(moveLot);
       } else {
+        mapRegion.x = 800;
+        mapRegion.y = 300;
         active.value = false;
 
         //改变司机的移动范围
@@ -136,28 +146,6 @@ export default {
       for (let dirver of dirver) {
         clearTimeout(dirver.time);
       }
-    }
-
-    //快排
-    function jsQuickSort(array) {
-      if (array.length <= 1) {
-        return array;
-      }
-      const pivotIndex = Math.floor(array.length / 2);
-      const pivot = array.splice(pivotIndex, 1)[0]; //从数组中取出"基准"元素
-      const left = [],
-        right = [];
-      array.forEach((item) => {
-        if (item > pivot) {
-          //left 存放比 pivot 大的元素
-          left.push(item);
-        } else {
-          //right 存放大于或等于 pivot 的元素
-          right.push(item);
-        }
-      });
-      //将数组分成了left和right两个部分
-      return jsQuickSort(left).concat(pivot, jsQuickSort(right)); //分而治之
     }
 
     //乘客搜索范围
@@ -200,12 +188,12 @@ export default {
 
     //计算动态变化的margin值
     function getMargin() {
-      /** 由于第一次获取margin值时对象中还未有该属性，可以用以下两种方法解决 
+      /** 由于第一次获取margin值时对象中还未有该属性，可以用以下两种方法解决
  *1、if(typeof a==='undefined'){
              console.log("#$#$")
          }
-  2、try catch 
- * 
+  2、try catch
+ *
 */
       let marginTop, marginLeft;
       try {
@@ -251,14 +239,13 @@ export default {
       return lot;
     }
 
-    let tempDriverList = []; //用来存储在搜索范围的司机
-    let tempMap = new Map(); //用来简历司机下标与年龄的联系
     let isDone = false; //是否搜索完毕
+    let isZone = false; //是否进入搜索范围
     /**
      * 判断司机是否在乘客约车范围
      * 若是：则将其isService属性置为true
      */
-    function search(unwatch, preseconds, watchTime, driverLength) {
+    async function search(unwatch, preseconds, watchTime, driverLength) {
       let updateseconds = Date.now();
       if (updateseconds - preseconds > 2000) {
         extend(); //若乘客约车的起初时间的差大于2000毫秒则延长搜索范围
@@ -275,37 +262,51 @@ export default {
         let dx = lotX > dirver[i].x ? lotX - dirver[i].x : dirver[i].x - lotX;
         let dy = lotY > dirver[i].y ? lotY - dirver[i].y : dirver[i].y - lotY;
         let distance = Math.floor(Math.hypot(dx, dy)); // 函数返回所有平方英寸的平方根
-        if (distance <= radius && watchTime >= 1 && !dirver[i].isService) {
+        if (distance <= radius && watchTime > 1 && !dirver[i].isService) {
           //保证watch属性至少监听了一次，避免报undefined
-          tempDriverList.splice(0, 0, dirver[i].age); //存储司机的年龄
-          tempMap.set(dirver[i].age, i); //建立司机年龄与下标的联系
-          isDone = true;
+          isZone = true;
+          unwatch(); //取消监视
+          let carAge = dirver[i].driverAge;
+          let index = i;
+          await pushStack({
+            index,
+            carAge,
+            distance,
+          });
         }
+      }
+
+      if (isZone) {
+        isDone = true;
       }
 
       //搜索完毕后将进入范围的司机进行后续处理
       if (isDone) {
-        jsQuickSort(tempDriverList); //年龄从大到小排序(快排)
-        Toast.clear();
-        unwatch(); //取消监视
-        isDone = false;
-        let i = tempMap.get(tempDriverList[0]); //最大年龄的司机下标
-        //改变司机的服务状态
-        dirver[i].isService = 1;
-        updateServiceStatus({
-          values: {
-            carID: dirver[i].carID,
-            isService: dirver[i].isService,
-          },
-        });
-
-        clearInterval(dirver[i].time);
-        $router.push({
-          name: "jieshao",
-          params: {
-            index: i,
-            carID: dirver[i].carID,
-          },
+        await sortCarStack().then((res) => {
+          Toast.clear();
+          isDone = false;
+          isZone = false;
+          let i = res; //目标司机下标
+          clearInterval(dirver[i].time);
+          //改变司机的服务状态
+          dirver[i].isService = 1;
+          updateServiceStatus({
+            values: {
+              carID: dirver[i].carID,
+              isService: dirver[i].isService,
+            },
+          });
+          setTimeout(() => {
+            dirver[i].x = passenger[0].x + getMargin().marginLeft;
+            dirver[i].y = passenger[0].y + getMargin().marginTop;
+            $router.push({
+              name: "jieshao",
+              params: {
+                index: i,
+                carID: dirver[i].carID,
+              },
+            });
+          }, Math.floor(Math.random() * (5000 - 3000)) + 3000);
         });
       }
     }
@@ -346,16 +347,33 @@ export default {
       }, useTime);
     }
 
+    //检查出车范围
+    function checkregion() {
+      if (
+        parseInt(passenger[0].x) > mapRegion.x ||
+        parseInt(passenger[0].y) > mapRegion.y
+      ) {
+        isRegion = false;
+      } else {
+        if (endSite.value == "白云机场" && parseInt(mapRegion.x) <= 800) {
+          isRegion = false;
+        } else {
+          isRegion = true;
+        }
+      }
+    }
     //触发事件按钮
     function onSubmit(value) {
+      //检查出车范围
+      checkregion();
       let isRule = sites.values.some(
         (item, index, array) => endSite.value == item.name
       ); //检查用户的输入
-      if (isRule) {
+      if (isRule && isRegion) {
         passenger[0].trigger = true; //触发车辆搜索事件
 
         let preseconds = Date.now(); //此刻的毫秒数
-        let watchTime = 0; //标识数据监测的次数，确保其监测次数至少>=1(解决司机的位置一开始就在乘客搜索范围的场景)
+        let watchTime = 0; //标识数据监测的次数，确保其监测次数至少>1(解决司机的位置一开始就在乘客搜索范围的场景)
         //watchEffect可以智能的监测你想要监测的数据
         let unwatch = watchEffect(() =>
           search(unwatch, preseconds, watchTime++, dirver.length)
@@ -383,6 +401,7 @@ export default {
       active,
       mapExtend,
       carInfo,
+      checkregion,
     };
   },
 
@@ -417,8 +436,8 @@ export default {
     this.$mybus.on("start", this.start); //全局事件总线注册
     this.$mybus.on("mapExtend", this.mapExtend);
     searchCarLogin().then((res) => {
-      this.carInfo.values = res;
       //从库中找登录状态为1的司机
+      this.carInfo.values = res;
       for (let i = 0; i < this.carInfo.values.length; i++) {
         let dirverX = Math.floor(Math.random() * (820 - 150)) + 150;
         let dirverY = Math.floor(Math.random() * (420 - 50)) + 50;

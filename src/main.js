@@ -7,6 +7,7 @@ import { Form } from 'vant';
 import { Field } from 'vant';
 import { Icon } from 'vant';
 
+console.log(createApp,"@@@@@@@@@@")
 const app = createApp(App)
 app.config.globalProperties.$mybus = new mitt()//挂载全局事件总线
 app.use(router)
